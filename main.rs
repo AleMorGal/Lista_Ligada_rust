@@ -154,47 +154,147 @@ impl<T: Copy> List<T>{
 		}
 	}
 	
+	
+    //~ Omite los warnigs por variables sin usar
+    #[allow(unused_variables)]
+	//~ empty(), verifica si la lista está vacía, devolviendo verdadero de ser así.
 	pub fn empty(&mut self) -> bool{
-		let vacio_Cabeza: bool;
-		let vacio_Cola: bool;
+		let vacio_cabeza: bool;
+		let vacio_cola: bool;
 		match &mut self.head.take(){
 			None =>{
-				vacio_Cabeza=true;
+				vacio_cabeza=true;
 			},
 			Some(next) =>{
-				vacio_Cabeza=false;
+				vacio_cabeza=false;
 			}
 			
 		}
 		match &mut self.tail.take(){
 			None =>{
-				vacio_Cola=true;
+				vacio_cola=true;
 			},
 			Some(prev) =>{
-				vacio_Cola=false;
+				vacio_cola=false;
 			}
 			
 		}
-		return vacio_Cabeza && vacio_Cola;
+		return vacio_cabeza && vacio_cola;
 	}
 	
-	//~ pub fn size(&mut self) -> i32{
-		
-	//~ }
+
+	//~ Funcion size(), devuelve el tamaño de la lista en entero
+    pub fn size(&mut self) -> i32{
+		//~ tam_lista guarda el tamanio de la lista 
+        let mut tam_lista = 0; 
+		//~ fin_lista sera verdade una vez que se recorra toda la lista
+        let mut fin_lista:bool = false;
+
+		//~ El valor de head de la lista para empezar desde el primer nodo
+        match &mut self.head.take(){
+			//~ Si no encuentra el valor de head quiere decir que la lista esta vacia
+            None => {
+                tam_lista = 0;
+            },
+			//~ En caso de encotrar un valor, la lista ya como minimo tiene un nodo
+            Some(head) => {
+                //~ incrementa indicando que se encontro el primer nodo
+                tam_lista = tam_lista + 1;
+
+                //~ Recupera el valor envuelto (wrappeed) de head
+                let mut head = head.borrow_mut();
+                //~ Toma el siguiente valor de head para pasar al siguiente nodo
+                let mut next = head.next.take();
+                
+				//~ Mientra no termine de recorrer toda la lista
+                while fin_lista != true{
+					//~ Revisa si se encontro un nodo siguiente
+                    match next{
+						//~ Si no se encuentra, significa que ya recorrio toda la lista y termina
+                        None => {
+                            fin_lista = true;
+                        },
+						//~ Si encuentra un valor, hay otro nodo
+                        Some(new_head) => {
+                            //~ Incrementa el contador del tamanio de la lista
+                            tam_lista = tam_lista + 1;
+
+							//~ Toma el siguiente valor de head para pasar al siguiente nodo
+                            let mut head = new_head.borrow_mut();
+                            next = head.next.take();
+                        }
+                    }
+					//~ Se repite el proceso hasta llegar al final de la lista
+                }
+            }
+        }
+		//~ Regresa el tamanio de la lista
+        return tam_lista;
+    }
+
+
+    //~ clear(), elimina todos los nodos de la lista.
+    pub fn clear(&mut self){
+        //~ vacio sera verdadero cuando la lista quede vacia
+        let mut vacio:bool = false;
+
+        //~ Mientras la lista no este vacia
+        while vacio != true {
+            //~ Realiza un pop_back para eliminar el ultimo nodo y recibir el objeto eliminado
+            match self.pop_back(){
+                //~ Si ya no obtuvo nada, ya elimino todos los nodos
+                None =>{
+                    //~ Se cumple la condicion y se saldra del ciclo
+                    vacio = true;
+                },
+                //~ Si regresa el nodo eliminado
+                Some(_) =>{
+                    //~ No hace nada
+                    //~ Realizara otro pop_back en el siguiente ciclo
+                }
+            }
+        }
+    }
 }
 
 
 fn main(){
 	
+	//~ Se crea la lista
 	let mut list = List::new();
-		list.push_back(1);
-		//~ list.push_back(2);
-		//~ list.push_back(3);
-		//~ list.push_back(4);
+
+	//~ Se ingresan algunos nodos
+	list.push_front(1);
+	list.push_front(2);
+	list.push_back(3);
+	list.push_back(4);
+	list.push_back(5);
+	 
+	
+	
+	//~ tam_lista almacenara el tamanio de la lista y despues imprime su valor
+	let mut tam_lista:i32 = list.size();
+	println!("Hay {} elementos en la lista", tam_lista);
+	
+	//~ Se vacia la lista
+	list.clear();
+	println!("\nSe vacio la lista");
+
+	tam_lista = list.size();
+	println!("\nDespues del clear hay {} elementos en la lista", tam_lista);
+
+
+	//~ Verificamos si la lista esta vacia
+	let vacio = list.empty();
+	if vacio == true{
+		println!("\nLa lista esta vacía\n");
+	}else{
+		println!("\nLa lista NO esta vacía\n");
+	}
+
+	//~ let mut node = Node::new(list.pop_back());
 		
-		
-		
-		let mut node = Node::new(list.pop_back());
+		//let mut node = Node::new(list.pop_back());
 		//~ match node.value{
 			//~ None => {
 				
@@ -207,9 +307,9 @@ fn main(){
 		
 		//~ node = Node:: new(list.pop_back());
 		//~ println!("nodo {:?}",node);
-		let vacio = list.empty();
-		println!("nodo {}",vacio);
+
 }
+
 //~ #[cfg(test)]
 //~ mod tests{
 	//~ use super::*;
