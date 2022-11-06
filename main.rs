@@ -1,6 +1,6 @@
 use std::{
 	cell::RefCell,
-	rc::{Rc,Weak},
+	rc::{Rc,Weak}, borrow::Borrow,
 };
 //~ Esta linea es para poder ver la estructura con {:?} en println!
 #[derive(Debug)]
@@ -48,12 +48,12 @@ impl<T: Copy> List<T>{
 			tail: None
 		}
 	}
-	
+
 	//~ funcion para agregaar a la lista en la parte de enfrente. Se recibe de parametro sus atributos y el valor a agregar
 	pub fn push_front(&mut self,value: T){
 		//~ Se crea un nuevo nodo donde se agregará al inicio de l lista
 		let mut node = Node::new(value);
-		
+
 		//~ Con Option , se utiliza match para ver si un trae algo o no con none y some
 		match &mut self.head.take(){
 			//~ Si el atributo cabeza no trae nada, ejecuta el codigo siguiente
@@ -82,7 +82,7 @@ impl<T: Copy> List<T>{
 	pub fn push_back(&mut self, value: T){
 		//~ Se crea un nuevo nodo donde se agregará al inicio de la lista
 		let mut node = Node:: new(value);
-		
+
 		//~ Con Option , se utiliza match para ver si un trae algo o no con none y some
 		match &mut self.tail.take(){
 			None =>{
@@ -103,9 +103,9 @@ impl<T: Copy> List<T>{
 			}
 		}
 	}
-	//~ funcion para sacar de la lista en la parte de atras. Se recibe de parametro sus atributos 
+	//~ funcion para sacar de la lista en la parte de atras. Se recibe de parametro sus atributos
 	pub fn pop_back(&mut self) -> Option<T>{
-		//~ Con Option , se utiliza match para ver si un trae algo o no con none y some.  
+		//~ Con Option , se utiliza match para ver si un trae algo o no con none y some.
 		match &mut self.tail.take(){
 			//~ Si la cola no contiene nada, no hace nada
 			None => None,
@@ -113,7 +113,7 @@ impl<T: Copy> List<T>{
 			Some(tail) =>{
 				//~ borrow_mut presta un valor envuelto . Este valor prestado no puede tomarse por otro hasta que lo suelte.
 				let mut tail = tail.borrow_mut();
-				
+
 				let prev = tail.prev.take();
 				match prev {
 					None => {
@@ -127,12 +127,12 @@ impl<T: Copy> List<T>{
 						}
 					}
 				};
-				
+
 				Some(tail.value)
 			}
 		}
 	}
-	
+
 	pub fn pop_front(&mut self) -> Option<T>{
 		match &mut self.head.take(){
 			None => None,
@@ -148,13 +148,13 @@ impl<T: Copy> List<T>{
 						self.head = Some(next);
 					}
 				};
-				
+
 				Some(head.value)
 			}
 		}
 	}
-	
-	
+
+
     //~ Omite los warnigs por variables sin usar
     #[allow(unused_variables)]
 	//~ empty(), verifica si la lista está vacía, devolviendo verdadero de ser así.
@@ -168,7 +168,7 @@ impl<T: Copy> List<T>{
 			Some(next) =>{
 				vacio_cabeza=false;
 			}
-			
+
 		}
 		match &mut self.tail.take(){
 			None =>{
@@ -177,16 +177,16 @@ impl<T: Copy> List<T>{
 			Some(prev) =>{
 				vacio_cola=false;
 			}
-			
+
 		}
 		return vacio_cabeza && vacio_cola;
 	}
-	
+
 
 	//~ Funcion size(), devuelve el tamaño de la lista en entero
     pub fn size(&mut self) -> i32{
-		//~ tam_lista guarda el tamanio de la lista 
-        let mut tam_lista = 0; 
+		//~ tam_lista guarda el tamanio de la lista
+        let mut tam_lista = 0;
 		//~ fin_lista sera verdade una vez que se recorra toda la lista
         let mut fin_lista:bool = false;
 
@@ -205,7 +205,7 @@ impl<T: Copy> List<T>{
                 let mut head = head.borrow_mut();
                 //~ Toma el siguiente valor de head para pasar al siguiente nodo
                 let mut next = head.next.take();
-                
+
 				//~ Mientra no termine de recorrer toda la lista
                 while fin_lista != true{
 					//~ Revisa si se encontro un nodo siguiente
@@ -255,11 +255,104 @@ impl<T: Copy> List<T>{
             }
         }
     }
+
+	pub fn find(&mut self, valor:T) ->Node<T>
+	{
+		//variables booleanas para llevar control de ciclo
+		let encontrado: bool = true;
+		let fin_lista: bool = false;
+		let vacia: bool = false;
+		let mut pos = 0;
+		let mut nodo_contiene: Node<T>; //aquí se guarda nodo que contiene resultado
+		//Comenzando a evaluar desde la cabeza de la lista
+		match &mut self.head.take()
+		{
+			//Si lista está vacía, variable booleana vacia es verdadero y se termina de evaluar
+			None=>{
+				vacia = true;
+			}
+			//Si lista tiene elementos
+			Some(head) =>{
+				//Tomamos el siguiente nodo
+				let mut head = head.borrow_mut();
+				let mut next = head.next.take();
+				//Mientras no lleguemos al final de la lista, evaluamos todos los nodos. 
+				while fin_lista != true{
+					//Evaluamos nodo siguiente
+					match next{
+						//Si nodo siguiente está vacío, llegamos al final de la lista
+						None =>{
+							fin_lista = true;
+							encontrado = false;
+						}
+						//Si hay algo, evaluamos su contenido
+						Some(new_head) =>{
+							pos = pos + 1;
+							//aquí se debería clonar el nodo que estamos evaluando en nodo_contiene
+							let mut temp_node = Node::new(&next.clone());
+							//Si valor buscado y valor del nodo evaluado coinciden, terminamos de buscar. No funciona por el momento.
+							if valor == temp_node.value{
+								encontrado = true;
+								fin_lista = true;
+							}
+							//Si no, pasamos al siguiente nodo
+							else{
+								let mut head = new_head.borrow_mut();
+								next = head.next.take();
+							}
+						}
+					}
+				}
+			}
+		}
+		if vacia == true{
+			print!("La lista esta vacía. No hay nada qué buscar.");
+		}
+		else if encontrado == true{
+			print!("Se encontró el valor en la posición {}", pos);
+		}
+		else{
+			print!("El valor no se encuentra en la lista.");
+		}
+		//debería regresar nodo en donde está el valor, o None si no está
+		nodo_contiene
+	}
+
+	pub fn erase(&mut self, posicion:T) -> Node<T>
+	{
+		let fin_lista: bool = false;
+		let vacia: bool = false;
+		let mut nodo_sig: Node<T>;
+		match &mut self.head.take(){
+			None =>{
+				let nodo = Node::new(None);
+				return nodo;
+			}
+			Some(head) =>{
+				let mut head = head.borrow_mut();
+				let mut next = head.next.take();
+				while fin_lista != true{
+					match next{
+						None =>{
+							fin_lista = true;
+						}
+						Some(new_head) =>{
+							//copiar nodo que se evalua actualmente y revisar valor
+							//si valor es igual a buscado se elimina
+							//actualizar enlaces
+
+						}
+					}
+				}
+			}
+
+	}
+	nodo_sig
 }
 
 
 fn main(){
-	
+
 	//~ Se crea la lista
 	let mut list = List::new();
 
@@ -269,13 +362,13 @@ fn main(){
 	list.push_back(3);
 	list.push_back(4);
 	list.push_back(5);
-	 
-	
-	
+
+
+
 	//~ tam_lista almacenara el tamanio de la lista y despues imprime su valor
 	let mut tam_lista:i32 = list.size();
 	println!("Hay {} elementos en la lista", tam_lista);
-	
+
 	//~ Se vacia la lista
 	list.clear();
 	println!("\nSe vacio la lista");
@@ -293,18 +386,18 @@ fn main(){
 	}
 
 	//~ let mut node = Node::new(list.pop_back());
-		
+
 		//let mut node = Node::new(list.pop_back());
 		//~ match node.value{
 			//~ None => {
-				
+
 			//~ },
 			//~ Some (value)=> {
 				//~ let numero = value;
 				//~ println!("nodo {}",numero);
 			//~ }
 		//~ }
-		
+
 		//~ node = Node:: new(list.pop_back());
 		//~ println!("nodo {:?}",node);
 
@@ -313,7 +406,7 @@ fn main(){
 //~ #[cfg(test)]
 //~ mod tests{
 	//~ use super::*;
-	
+
 	//~ #[test]
 	//~ fn works_builds_list(){
 		//~ let mut list = List::new();
@@ -321,15 +414,15 @@ fn main(){
 		//~ list.push_back(2);
 		//~ list.push_back(3);
 		//~ list.push_back(4);
-		
+
 		//~ assert_eq!(list.pop_back(), Some(4));
 		//~ assert_eq!(list.pop_back(), Some(3));
 		//~ assert_eq!(list.pop_back(), Some(2));
 		//~ assert_eq!(list.pop_back(), Some(1));
 		//~ assert_eq!(list.pop_back(), None);
-		
+
 	//~ }
-	
+
 	//~ #[test]
 	//~ fn works_builds_list_front(){
 		//~ let mut list = List::new();
@@ -337,7 +430,7 @@ fn main(){
 		//~ list.push_front(2);
 		//~ list.push_front(3);
 		//~ list.push_front(4);
-		
+
 		//~ assert_eq!(list.pop_front(), Some(4));
 		//~ assert_eq!(list.pop_front(), Some(3));
 		//~ assert_eq!(list.pop_front(), Some(2));
